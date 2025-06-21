@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moyennes - Semestre S2</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1700px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .student-info {
+            background-color: #e8f5e8;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 12px;
+        }
+        .module-header {
+            background-color: #2196F3;
+            color: white;
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 120px;
+            min-width: 80px;
+        }
+        .module-group-header {
+            background-color: #FF9800;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 120px;
+            min-width: 100px;
+        }
+        .average-cell {
+            font-weight: bold;
+        }
+        .module-avg-cell {
+            background-color: #fff3e0;
+            font-weight: bold;
+            color: #e65100;
+        }
+        .high-score {
+            background-color: #c8e6c9;
+        }
+        .low-score {
+            background-color: #ffcdd2;
+        }
+        .medium-score {
+            background-color: #fff3e0;
+        }
+        .absent-score {
+            background-color: #f5f5f5;
+            color: #666;
+            font-style: italic;
+        }
+        .ranking-cell {
+            background-color: #f0f4ff;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .module-average-row {
+            background-color: #e3f2fd !important;
+            font-weight: bold;
+            border-top: 2px solid #1976d2;
+        }
+        .module-average-cell {
+            background-color: #bbdefb !important;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+        }
+        .stats-summary {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .stat-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            color: #007bff;
+        }
+        .module-details {
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .module-group {
+            margin-bottom: 15px;
+        }
+        .module-group-title {
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+        .module-elements {
+            margin-left: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Moyennes des élèves par module - Semestre S2</h1>
+        
+        <div class="table-container">
+            <table id="averagesTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Classement</th>
+                        <th rowspan="2">Matricule</th>
+                        <th rowspan="2">Nom</th>
+                        <th rowspan="2">Prénom</th>
+                        <th rowspan="2">Moyenne Générale</th>
+                        
+                        <!-- POO et Bases de données -->
+                        <th class="module-group-header">POO et Bases données</th>
+                        <th class="module-header">POO Python</th>
+                        <th class="module-header">Bases Données</th>
+                        <th class="module-header">Programmation Web</th>
+                        
+                        <!-- Apprentissage et Optimisation -->
+                        <th class="module-group-header">Apprentissage Optimisation</th>
+                        <th class="module-header">Statistical Learning</th>
+                        <th class="module-header">Techniques Optimisation</th>
+                        
+                        <!-- Communication et traitement info -->
+                        <th class="module-group-header">Communication Info</th>
+                        <th class="module-header">Communications Numériques</th>
+                        <th class="module-header">Traitement Visuel</th>
+                        
+                        <!-- Réseaux Télécoms -->
+                        <th class="module-group-header">Réseaux Télécoms</th>
+                        <th class="module-header">Multiplexage</th>
+                        <th class="module-header">Evolution Réseaux</th>
+                        
+                        <!-- Projet Découverte -->
+                        <th class="module-group-header">Projet Découverte</th>
+                        <th class="module-header">Projet Thématique</th>
+                        
+                        <!-- Ingénieur et Diversité -->
+                        <th class="module-group-header">Ingénieur Diversité</th>
+                        <th class="module-header">Sociologie</th>
+                        <th class="module-header">Management</th>
+                        
+                        <!-- Langues -->
+                        <th class="module-group-header">Langues</th>
+                        <th class="module-header">Langue Française</th>
+                        <th class="module-header">English IT</th>
+                    </tr>
+                </thead>
+                <tbody id="averagesTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Données CSV pour le S2
+        const csvData = `Matricule,Nom,Prénom,Bases_Données,Communications_Numériques,English_IT,Evolution_Réseaux,Langue_Française,Management,Multiplexage,POO_Python,Programmation_Web,Projet_Thématique,Sociologie,Statistical_Learning,Techniques_Optimisation,Traitement_Visuel
+240144,AGOURAM,Yassine,12.50,9.50,9,11.56,14,11,15,12,15.00,15.00,10.5,13.50,11.25,10
+240145,BAHHOU,Marouane,18.75,15.50,15.25,15.65,17,16,14.25,10,14.60,17.50,17.5,12.00,15.75,16.5
+240146,BENHACHMI,Saad,12.00,8.50,9,10.14,16,10,16.5,13,13.75,14.00,IPE,11.50,11,13
+240147,BENSELLOUM,Nizar,17.50,18.00,14.5,15.41,18,15,17.5,16,14.50,19.00,16,15.00,14.25,17
+240148,BOUAJINE,Yasmine,15.50,14.50,15.5,15.17,15,13.5,13,18,13.50,18.00,12.5,16.00,14,15.5
+240149,BOUKCIM,Mohamed,12.00,3.00,11.75,11.00,14,10.5,Abs,14,12.50,15.00,IPE,11.00,12.25,13.25
+240150,BOULMANI,Ghita,15.00,17.00,15.5,15.87,14,14.5,16,14,16.25,16.00,15.5,16.50,16.25,17.5
+240151,BOURHIM,Souhail,13.50,13.00,13.75,15.32,16,15,15.75,13,16.00,19.00,16.5,14.50,12.25,12.5
+240152,BOUTJANOUITE,Kaouthar,12.50,10.50,14.5,11.77,15,17,Abs,8,11.25,17.00,4.5,11.00,9.25,13
+240153,BOUYA,Houda,15.50,12.00,13.75,14.15,16,7,14.25,13,16.88,17.00,9.25,11.00,12,11
+240154,CHAQUAI,Maryeme,14.50,10.00,15,12.69,16,10,15,10,14.00,18.00,9.5,12.00,11,9.5
+240155,DIANA,Mohamed,12.00,5.00,8.5,16.11,14,8,11,6,11.75,16.00,9,8.50,12.5,5
+240156,EL ABDOUSSI,Wissal,12.00,14.00,13.25,12.10,16,9.5,Abs,9,12.00,17.00,7,8.50,12.5,10.5
+240157,EL KARFI,Soufia,16.50,2.00,15,11.00,16,0,15,12,17.00,17.00,9.5,11.00,9.25,15.25
+240159,EL WALI,Zakarya,12.75,8.25,13.25,14.49,15,11,Abs,9,11.00,17.00,10,13.00,14.5,17.5
+240160,EL-AASSEMY,Abdellah,15.50,8.00,11.5,14.04,13,10.5,Abs,14,11.00,16.00,IPE,14.50,13.5,16
+240161,ELGUERCHE,Ahmed,12.50,8.50,12.5,11.48,16,15.5,14.25,7,15.00,18.00,4.5,16.00,11,15.5
+240162,ESSUFI,Hassan,18.50,15.50,13,14.64,13,13.5,14.5,15,16.50,18.00,6.5,14.50,12.61,11.25
+240163,GADAL,Leila,14.75,11.00,13,11.49,15,9.5,12.5,9,14.25,17.00,9.5,14.00,9.5,4
+240164,GHANAM,Fatima-Ezzahra,ABS,ABS,15.5,9.45,17,0,Abs,0,16.50,17.00,6.5,10.50,abs,10
+240165,HAME,Ali,14.00,4.00,14.5,12.38,16,11,11.5,7,13.25,15.00,16.5,11.00,11,15.25
+240166,IDRISSI,Salma,12.50,10.00,14.375,10.63,14,10,13.5,8,14.75,17.00,7,9.00,12.5,15
+240167,IKTIB,Khalid,12.50,6.25,12,11.98,Abs,12.5,Abs,14,11.00,16.00,IPE,10.50,10,14
+240168,KHAYARI,Said,13.50,14.50,15.75,15.69,15,16,17.5,16,11.00,17.00,15,12.00,14,14
+240169,KOUTAT,Saâd,16.00,13.50,9.5,12.01,15,,Abs,13,11.00,16.00,6.5,10.50,14.25,6.25
+240170,LAZAAR,El Mehdi,18.50,12.50,16,14.60,17,15.5,16.6,13,19.25,17.50,16.5,16.50,13,17.25
+240171,MAMOURI,Zakaria,14.25,11.00,15.25,Abs,13,,Abs,12,11.25,16.00,ABS,8.00,10,Absent
+240172,NASSOUH,Iliace,17.50,11.00,14.5,9.44,13,11.5,12,13,11.00,16.00,5,9.00,14.75,14.75
+240174,SALAHMI,Nouhaila,13.50,13.00,15.5,13.86,14,11,15.25,10,14.00,17.00,7.5,8.00,14,12.5
+240175,SELLAM,Mustapha,19.50,15.50,15.5,14.42,15,16,15.75,18,15.75,18.00,4.75,14.00,17.5,17
+240176,SELLAME,Salwa,14.50,12.00,15.5,11.22,14,10.5,15.5,13,12.00,16.00,8,12.00,12.75,13.5
+240177,TABIT,Youssef,13.50,13.00,12.5,12.14,14,10,Abs,16,13.75,16.50,15.5,10.00,14.5,15`;
+
+        // Définition des modules regroupés
+        const moduleGroups = {
+            'POO_et_BD': {
+                name: 'POO et Bases de données',
+                elements: ['POO_Python', 'Bases_Données', 'Programmation_Web']
+            },
+            'Apprentissage_Optimisation': {
+                name: 'Apprentissage et Optimisation',
+                elements: ['Statistical_Learning', 'Techniques_Optimisation']
+            },
+            'Communication_Info': {
+                name: 'Communication et traitement info',
+                elements: ['Communications_Numériques', 'Traitement_Visuel']
+            },
+            'Reseaux_Telecoms': {
+                name: 'Réseaux Télécoms',
+                elements: ['Multiplexage', 'Evolution_Réseaux']
+            },
+            'Projet_Decouverte': {
+                name: 'Projet Découverte',
+                elements: ['Projet_Thématique']
+            },
+            'Ingenieur_Diversite': {
+                name: 'Ingénieur et Diversité Culturelle',
+                elements: ['Sociologie', 'Management']
+            },
+            'Langues': {
+                name: 'Langues étrangères',
+                elements: ['Langue_Française', 'English_IT']
+            }
+        };
+
+        function getScoreClass(score) {
+            if (score === null || score === undefined || score === '' || 
+                score === 'ABS' || score === 'Abs' || score === 'IPE' || 
+                score === 'abs' || score === 'Absent' || score === 'N/A') {
+                return 'absent-score';
+            }
+            const numScore = parseFloat(score);
+            if (isNaN(numScore)) return 'absent-score';
+            if (numScore >= 16) return 'high-score';
+            if (numScore >= 12) return 'medium-score';
+            return 'low-score';
+        }
+
+        function formatScore(score) {
+            if (score === null || score === undefined || score === '' || 
+                score === 'ABS' || score === 'Abs' || score === 'abs' || 
+                score === 'IPE' || score === 'Absent' || score === 'N/A') {
+                return 'ABS';
+            }
+            const numScore = parseFloat(score);
+            if (isNaN(numScore)) return 'ABS';
+            return numScore.toFixed(2);
+        }
+
+        function calculateModuleAverage(student, moduleElements) {
+            const validScores = [];
+            moduleElements.forEach(element => {
+                const score = student[element];
+                if (score !== null && score !== undefined && score !== '' && 
+                    score !== 'ABS' && score !== 'Abs' && score !== 'abs' &&
+                    score !== 'IPE' && score !== 'Absent') {
+                    const numScore = parseFloat(score);
+                    if (!isNaN(numScore)) {
+                        validScores.push(numScore);
+                    }
+                }
+            });
+            
+            if (validScores.length === 0) return 'N/A';
+            return validScores.reduce((a, b) => a + b, 0) / validScores.length;
+        }
+
+        function calculateGeneralAverage(student, moduleGroups) {
+            const moduleAverages = [];
+            Object.values(moduleGroups).forEach(module => {
+                const avg = calculateModuleAverage(student, module.elements);
+                if (avg !== 'N/A') {
+                    moduleAverages.push(avg);
+                }
+            });
+            
+            if (moduleAverages.length === 0) return 0;
+            return moduleAverages.reduce((a, b) => a + b, 0) / moduleAverages.length;
+        }
+
+        // Parse CSV data
+        const results = Papa.parse(csvData, {
+            header: true,
+            skipEmptyLines: true
+        });
+
+        // Calculate module averages for each student
+        const studentsWithModuleAverages = results.data.map(student => {
+            const studentData = { ...student };
+            Object.keys(moduleGroups).forEach(moduleKey => {
+                const module = moduleGroups[moduleKey];
+                studentData[moduleKey] = calculateModuleAverage(student, module.elements);
+            });
+            studentData.generalAverage = calculateGeneralAverage(student, moduleGroups);
+            return studentData;
+        });
+
+        // Sort students by general average
+        const sortedStudents = studentsWithModuleAverages
+            .sort((a, b) => b.generalAverage - a.generalAverage)
+            .map((student, index) => ({ ...student, ranking: index + 1 }));
+
+        // Calculate module group averages for the class
+        const classModuleAverages = {};
+        Object.keys(moduleGroups).forEach(moduleKey => {
+            const validScores = sortedStudents
+                .map(s => s[moduleKey])
+                .filter(score => score !== 'N/A' && !isNaN(score));
+            
+            if (validScores.length > 0) {
+                classModuleAverages[moduleKey] = (validScores.reduce((a, b) => a + b, 0) / validScores.length);
+            } else {
+                classModuleAverages[moduleKey] = 'N/A';
+            }
+        });
+
+        // Calculate individual element averages for the class
+        const elementAverages = {};
+        const allElements = ['POO_Python', 'Bases_Données', 'Programmation_Web', 'Statistical_Learning', 
+                           'Techniques_Optimisation', 'Communications_Numériques', 'Traitement_Visuel',
+                           'Multiplexage', 'Evolution_Réseaux', 'Projet_Thématique', 'Sociologie', 
+                           'Management', 'Langue_Française', 'English_IT'];
+
+        allElements.forEach(element => {
+            const validScores = sortedStudents
+                .map(s => s[element])
+                .filter(score => {
+                    if (score === null || score === undefined || score === '' || 
+                        score === 'ABS' || score === 'Abs' || score === 'abs' ||
+                        score === 'IPE' || score === 'Absent') return false;
+                    const numScore = parseFloat(score);
+                    return !isNaN(numScore);
+                })
+                .map(score => parseFloat(score));
+            
+            if (validScores.length > 0) {
+                const sum = validScores.reduce((a, b) => a + b, 0);
+                elementAverages[element] = (sum / validScores.length);
+            } else {
+                elementAverages[element] = 'N/A';
+            }
+        });
+
+        const tableBody = document.getElementById('averagesTableBody');
+
+        sortedStudents.forEach(student => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td class="ranking-cell">${student.ranking}</td>
+                <td class="student-info">${student.Matricule}</td>
+                <td class="student-info">${student.Nom}</td>
+                <td class="student-info">${student.Prénom}</td>
+                <td class="average-cell ${getScoreClass(student.generalAverage)}">${formatScore(student.generalAverage)}</td>
+                
+                <!-- POO et Bases de données -->
+                <td class="module-avg-cell ${getScoreClass(student.POO_et_BD)}">${formatScore(student.POO_et_BD)}</td>
+                <td class="${getScoreClass(student.POO_Python)}">${formatScore(student.POO_Python)}</td>
+                <td class="${getScoreClass(student.Bases_Données)}">${formatScore(student.Bases_Données)}</td>
+                <td class="${getScoreClass(student.Programmation_Web)}">${formatScore(student.Programmation_Web)}</td>
+                
+                <!-- Apprentissage et Optimisation -->
+                <td class="module-avg-cell ${getScoreClass(student.Apprentissage_Optimisation)}">${formatScore(student.Apprentissage_Optimisation)}</td>
+                <td class="${getScoreClass(student.Statistical_Learning)}">${formatScore(student.Statistical_Learning)}</td>
+                <td class="${getScoreClass(student.Techniques_Optimisation)}">${formatScore(student.Techniques_Optimisation)}</td>
+                
+                <!-- Communication et traitement info -->
+                <td class="module-avg-cell ${getScoreClass(student.Communication_Info)}">${formatScore(student.Communication_Info)}</td>
+                <td class="${getScoreClass(student.Communications_Numériques)}">${formatScore(student.Communications_Numériques)}</td>
+                <td class="${getScoreClass(student.Traitement_Visuel)}">${formatScore(student.Traitement_Visuel)}</td>
+                
+                <!-- Réseaux Télécoms -->
+                <td class="module-avg-cell ${getScoreClass(student.Reseaux_Telecoms)}">${formatScore(student.Reseaux_Telecoms)}</td>
+                <td class="${getScoreClass(student.Multiplexage)}">${formatScore(student.Multiplexage)}</td>
+                <td class="${getScoreClass(student.Evolution_Réseaux)}">${formatScore(student.Evolution_Réseaux)}</td>
+                
+                <!-- Projet Découverte -->
+                <td class="module-avg-cell ${getScoreClass(student.Projet_Decouverte)}">${formatScore(student.Projet_Decouverte)}</td>
+                <td class="${getScoreClass(student.Projet_Thématique)}">${formatScore(student.Projet_Thématique)}</td>
+                
+                <!-- Ingénieur et Diversité -->
+                <td class="module-avg-cell ${getScoreClass(student.Ingenieur_Diversite)}">${formatScore(student.Ingenieur_Diversite)}</td>
+                <td class="${getScoreClass(student.Sociologie)}">${formatScore(student.Sociologie)}</td>
+                <td class="${getScoreClass(student.Management)}">${formatScore(student.Management)}</td>
+                
+                <!-- Langues -->
+                <td class="module-avg-cell ${getScoreClass(student.Langues)}">${formatScore(student.Langues)}</td>
+                <td class="${getScoreClass(student.Langue_Française)}">${formatScore(student.Langue_Française)}</td>
+                <td class="${getScoreClass(student.English_IT)}">${formatScore(student.English_IT)}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+
+        // Add module averages row
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'module-average-row';
+        avgRow.innerHTML = `
+            <td class="module-average-cell">-</td>
+            <td class="module-average-cell" colspan="3">MOYENNE DE MODULE</td>
+            <td class="module-average-cell">-</td>
+            
+            <!-- POO et Bases de données -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.POO_et_BD)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.POO_Python)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Bases_Données)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Programmation_Web)}</td>
+            
+            <!-- Apprentissage et Optimisation -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.Apprentissage_Optimisation)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Statistical_Learning)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Techniques_Optimisation)}</td>
+            
+            <!-- Communication et traitement info -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.Communication_Info)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Communications_Numériques)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Traitement_Visuel)}</td>
+            
+            <!-- Réseaux Télécoms -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.Reseaux_Telecoms)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Multiplexage)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Evolution_Réseaux)}</td>
+            
+            <!-- Projet Découverte -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.Projet_Decouverte)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Projet_Thématique)}</td>
+            
+            <!-- Ingénieur et Diversité -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.Ingenieur_Diversite)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Sociologie)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Management)}</td>
+            
+            <!-- Langues -->
+            <td class="module-average-cell">${formatScore(classModuleAverages.Langues)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.Langue_Française)}</td>
+            <td class="module-average-cell">${formatScore(elementAverages.English_IT)}</td>
+        `;
+        
+        tableBody.appendChild(avgRow);
+
+        // Calculate statistics
+        const totalStudents = sortedStudents.length;
+        const validGeneralAverages = sortedStudents
+            .map(s => s.generalAverage)
+            .filter(avg => avg !== 'N/A' && !isNaN(avg));
+        
+        const classAverage = validGeneralAverages.length > 0 
+            ? (validGeneralAverages.reduce((a, b) => a + b, 0) / validGeneralAverages.length) 
+            : 0;
+        
+        const bestAverage = validGeneralAverages.length > 0 
+            ? Math.max(...validGeneralAverages) 
+            : 0;
+        
+        const passingStudents = sortedStudents
+            .filter(s => s.generalAverage >= 11)
+            .length;
+
+        // Update statistics display
+        document.getElementById('totalStudents').textContent = totalStudents;
+        document.getElementById('classAverage').textContent = classAverage.toFixed(2);
+        document.getElementById('bestAverage').textContent = bestAverage.toFixed(2);
+        document.getElementById('passingStudents').textContent = `${passingStudents} (${Math.round((passingStudents / totalStudents) * 100)}%)`;
+    </script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moyennes des élèves par module - Semestre 1</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1600px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .student-info {
+            background-color: #e8f5e8;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 12px;
+        }
+        .module-header {
+            background-color: #2196F3;
+            color: white;
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 120px;
+            min-width: 80px;
+        }
+        .module-average-header {
+            background-color: #FF9800;
+            color: white;
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 120px;
+            min-width: 100px;
+        }
+        .average-cell {
+            font-weight: bold;
+        }
+        .module-avg-cell {
+            background-color: #fff3e0;
+            font-weight: bold;
+            color: #e65100;
+        }
+        .high-score {
+            background-color: #c8e6c9;
+        }
+        .low-score {
+            background-color: #ffcdd2;
+        }
+        .medium-score {
+            background-color: #fff3e0;
+        }
+        .ranking-cell {
+            background-color: #f0f4ff;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .module-average-row {
+            background-color: #e3f2fd !important;
+            font-weight: bold;
+            border-top: 2px solid #1976d2;
+        }
+        .module-average-cell {
+            background-color: #bbdefb !important;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Moyennes des élèves par module - Semestre S1</h1>
+        <div class="table-container">
+            <table id="averagesTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Classement</th>
+                        <th rowspan="2">Matricule</th>
+                        <th rowspan="2">Nom</th>
+                        <th rowspan="2">Prénom</th>
+                        <th rowspan="2">Moyenne Générale</th>
+                        <th colspan="3">Informatique de base</th>
+                        <th rowspan="2" class="module-average-header">Moy. Info Base</th>
+                        <th colspan="2">Processus et Optimisation</th>
+                        <th rowspan="2" class="module-average-header">Moy. Proc. Opt.</th>
+                        <th colspan="2">Outils de simulation et Filtrage</th>
+                        <th rowspan="2" class="module-average-header">Moy. Outils Sim.</th>
+                        <th colspan="3">Bases TI</th>
+                        <th rowspan="2" class="module-average-header">Moy. Bases TI</th>
+                        <th colspan="2">Bases des réseaux</th>
+                        <th rowspan="2" class="module-average-header">Moy. Réseaux</th>
+                        <th colspan="2">Compétences Numériques</th>
+                        <th rowspan="2" class="module-average-header">Moy. Comp. Num.</th>
+                        <th colspan="2">Langues étrangères</th>
+                        <th rowspan="2" class="module-average-header">Moy. Langues</th>
+                    </tr>
+                    <tr>
+                        <th class="module-header">Algorithmique</th>
+                        <th class="module-header">Architecture</th>
+                        <th class="module-header">Systèmes Exploit.</th>
+                        <th class="module-header">Statistique</th>
+                        <th class="module-header">RO</th>
+                        <th class="module-header">Outils Simul.</th>
+                        <th class="module-header">Synthèse Filtres</th>
+                        <th class="module-header">Traitement Signal</th>
+                        <th class="module-header">Théorie Info (T)</th>
+                        <th class="module-header">Théorie Info (C)</th>
+                        <th class="module-header">Media Trans.</th>
+                        <th class="module-header">Réseaux ICT</th>
+                        <th class="module-header">Outils Collab.</th>
+                        <th class="module-header">Traitement Données</th>
+                        <th class="module-header">TEC</th>
+                        <th class="module-header">Anglais</th>
+                    </tr>
+                </thead>
+                <tbody id="averagesTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+    <script>
+        // Données CSV intégrées
+        const csvData = `Matricule,Nom,Prénom,Moyenne,Algorithmique,Anglais,Architecture,Traitement Données,Outils Collab.,Media Trans.,Outils Simul.,Réseaux ICT,RO,Statistique,Synthèse Filtres,Systèmes Exploit.,TEC,Théorie Info (T),Théorie Info (C),Traitement Signal
+240144,AGOURAM,Yassine,11.85,9.82,15,13.25,15.5,13,15.75,15.5,11,11.75,9.5,13,12.5,13,8,7,6
+240145,BAHHOU,Marouane,14.98,15.392,15.25,17.25,18.5,15,18,18.5,12.25,7.5,10,16.5,10.5,17,19,13,16
+240146,BENHACHMI,Saad,12.48,12.47,14,17.5,14,8,14.5,15,11,13.5,9.5,12,10.75,16,9,13.5,9
+240147,BENSELLOUM,Nizar,14.66,15.028,16.5,15,16,15,15,19.5,16,15.25,12,11.5,11.25,17,12,12.5,15
+240148,BOUAJINE,Yasmine,11.53,11.026,12,10,17,10,12,7.5,16,15.25,8.5,12,12.25,16,10,12.5,2.5
+240149,BOUKCIM,Mohamed,12.75,13.234,14.5,15.75,16,14,16,9.5,11,11.75,11,12,13.75,13,10.5,8.5,13.5
+240150,BOULMANI,Ghita,13.31,11.284,15,17,15.5,10,16,17.5,12,8.5,10,14,10.75,12,20,12.5,11
+240151,BOURHIM,Souhail,14.16,12.038,15.5,16,18,14,17,14,13.5,18.25,15.5,11,14.75,14,16,11.5,5.5
+240152,BOUTJANOUITE,Kaouthar,10.63,8.254,13,15,10,11,13.25,6,10,6.5,6.5,18,10.5,15,9,9.5,8.5
+240153,BOUYA,Houda,13.46,11.578,13.5,15.75,16,12,20,11,10,16.75,6.5,15.5,10.75,14,16,14.5,11.5
+240154,CHAQUAI,Maryeme,11.97,10.45,16,14.25,13.5,13,18,11,11,11,7,8.5,9.75,17,14,11,6
+240155,DIANA,Mohamed,10.07,10.45,13,13,8,10,10,7.5,9,6,10,11.5,10.75,14,11.5,8.5,8
+240156,EL ABDOUSSI,Wissal,12.47,12.02,8.5,15.5,13,12,15,11,12,13.75,7,18,9.25,13,14.5,15,10
+240157,EL KARFI,Soufia,11.63,12.118,15,0,14,11,15,11.5,12.5,12.5,8.5,12.5,15,17,11,10,8.5
+240159,EL WALI,Zakarya,13.03,14.04,13,15,15,13,15.5,17,16.75,16.5,7.5,9,13.25,15,11.5,8.5,8
+240160,EL-AASSEMY,Abdellah,12.67,14.966,13,14.5,15,11,13.25,12.5,14.25,8.75,9,9,18,10,17,11,11.5
+240161,ELGUERCHE,Ahmed,11.89,10.436,12,14,14.5,14,15,8.5,13,10.5,10,9,9.25,15,13.5,11,10.5
+240162,ESSOUFI,Hassan,14.92,13.98,15,18.25,16,14,18.5,17.5,13.25,15.5,13.5,15.5,8.25,14,19.5,13.5,12.5
+240163,GADAL,Leila,12.02,11.13,14,12,15,12,15.5,14,14,9,11,10,10.75,13,11,11.5,8.5
+240164,GHANAM,Fatima-Ezzahra,12.14,10.288,15,13.5,18,13,17,11,9,15.5,11.5,11,11,17,7,11.5,3
+240165,HAME,Ali,12.87,12.664,14,16,15.5,15,15.25,6,10,12.25,14.5,12,15.25,17,8,14,8.5
+240166,IDRISSI,Salma,11.98,11.63,14,15,15.5,12,14,9,14.75,8.5,11.5,13.5,13.25,16,11,9,3
+240167,IKTIB,Khalid,12.15,12.578,14,12.5,17,12,15.75,9.5,16.25,16.5,4,14.5,8.75,16,6,13,6
+240168,KHAYARI,Said,15.08,15.012,15.25,17.25,16.5,15,17,17.5,13.5,11.75,11.5,19,12.5,15,17,12.5,15
+240169,KOUTAT,Saâd,14.67,16.186,15.5,16,16,15,18.75,19,17.25,15.5,12,13.5,14,11,7,10,18
+240170,LAZAAR,El Mehdi,14.96,13.87,15,16,19,17,18,18,11,13.75,11,16,17.75,17,14,14.5,7.5
+240171,MAMOURI,Zakaria,8.69,11.726,14,7,17,8,13,0,12.25,6.5,6,10.5,11.5,10,3,7,1.5
+240172,NASSOUH,Iliace,13.77,15.27,13.75,15.5,16.5,10,15,18,11,14.25,11,14.5,11.5,10,18,10.5,15.5
+240174,SALAHMI,Nouhaila,13.17,12.424,15.75,15.25,18,15,17.25,15,10,10.25,8,15.5,12.25,15,9.5,14,7.5
+240175,SELLAM,Mustapha,16.24,16.072,16,18,18,13,20,19.5,10,13.75,16.5,18.5,17,15,15.5,14.5,18.5
+240176,SELLAME,Salwa,11.03,11.678,13.75,14.75,16,12,11,10.5,10,7.5,11,10,8.75,14,6,11,8.5
+240177,TABIT,Youssef,11.67,13.984,13.25,15.5,14.5,8,14,11,19,10.25,10,9.5,12.75,10,4.5,9,11.5`;
+
+        function getScoreClass(score) {
+            const numScore = parseFloat(score);
+            if (numScore >= 16) return 'high-score';
+            if (numScore >= 12) return 'medium-score';
+            return 'low-score';
+        }
+
+        function formatScore(score) {
+            return score === 0 || score === '0' ? 'ABS' : parseFloat(score).toFixed(2);
+        }
+
+        function calculateModuleAverage(student, moduleFields) {
+            const validScores = moduleFields
+                .map(field => student[field])
+                .filter(score => score !== null && score !== undefined && score !== 0);
+            
+            if (validScores.length === 0) return 0;
+            const sum = validScores.reduce((a, b) => a + b, 0);
+            const average = sum / validScores.length;
+            
+            // Si la moyenne est inférieure à 11, la remplacer par 11
+            return average < 11 ? 11 : average;
+        }
+
+        // Parse CSV data
+        const results = Papa.parse(csvData, {
+            header: true,
+            skipEmptyLines: true,
+            dynamicTyping: true
+        });
+
+        // Sort students by average (descending) and add ranking
+        const sortedStudents = results.data
+            .map((student, index) => ({ ...student, originalIndex: index }))
+            .sort((a, b) => b.Moyenne - a.Moyenne)
+            .map((student, index) => ({ ...student, ranking: index + 1 }));
+
+        // Define module groups
+        const moduleGroups = {
+            infoBase: ['Algorithmique', 'Architecture', 'Systèmes Exploit.'],
+            processusOpt: ['Statistique', 'RO'],
+            outilsSim: ['Outils Simul.', 'Synthèse Filtres'],
+            basesTI: ['Traitement Signal', 'Théorie Info (T)', 'Théorie Info (C)'],
+            reseaux: ['Media Trans.', 'Réseaux ICT'],
+            compNum: ['Outils Collab.', 'Traitement Données'],
+            langues: ['TEC', 'Anglais']
+        };
+
+        // Calculate overall module averages
+        const moduleAverages = {};
+        const allModuleFields = [
+            'Algorithmique', 'Architecture', 'Systèmes Exploit.', 'Statistique', 'RO',
+            'Outils Simul.', 'Synthèse Filtres', 'Traitement Signal', 'Théorie Info (T)',
+            'Théorie Info (C)', 'Media Trans.', 'Réseaux ICT', 'Outils Collab.',
+            'Traitement Données', 'TEC', 'Anglais'
+        ];
+
+        allModuleFields.forEach(field => {
+            const validScores = sortedStudents
+                .map(s => s[field])
+                .filter(score => score !== null && score !== undefined && score !== 0);
+            
+            if (validScores.length > 0) {
+                const sum = validScores.reduce((a, b) => a + b, 0);
+                moduleAverages[field] = (sum / validScores.length).toFixed(2);
+            } else {
+                moduleAverages[field] = 'N/A';
+            }
+        });
+
+        const tableBody = document.getElementById('averagesTableBody');
+
+        sortedStudents.forEach(student => {
+            const row = document.createElement('tr');
+            
+            // Calculate module group averages for this student
+            const avgInfoBase = calculateModuleAverage(student, moduleGroups.infoBase);
+            const avgProcessusOpt = calculateModuleAverage(student, moduleGroups.processusOpt);
+            const avgOutilsSim = calculateModuleAverage(student, moduleGroups.outilsSim);
+            const avgBasesTI = calculateModuleAverage(student, moduleGroups.basesTI);
+            const avgReseaux = calculateModuleAverage(student, moduleGroups.reseaux);
+            const avgCompNum = calculateModuleAverage(student, moduleGroups.compNum);
+            const avgLangues = calculateModuleAverage(student, moduleGroups.langues);
+            
+            // Informations de l'étudiant avec classement
+            row.innerHTML = `
+                <td class="ranking-cell">${student.ranking}</td>
+                <td class="student-info">${student.Matricule}</td>
+                <td class="student-info">${student.Nom}</td>
+                <td class="student-info">${student.Prénom}</td>
+                <td class="average-cell ${getScoreClass(student.Moyenne)}">${formatScore(student.Moyenne)}</td>
+                <td class="${getScoreClass(student.Algorithmique)}">${formatScore(student.Algorithmique)}</td>
+                <td class="${getScoreClass(student.Architecture)}">${formatScore(student.Architecture)}</td>
+                <td class="${getScoreClass(student['Systèmes Exploit.'])}">${formatScore(student['Systèmes Exploit.'])}</td>
+                <td class="module-avg-cell ${getScoreClass(avgInfoBase)}">${formatScore(avgInfoBase)}</td>
+                <td class="${getScoreClass(student.Statistique)}">${formatScore(student.Statistique)}</td>
+                <td class="${getScoreClass(student.RO)}">${formatScore(student.RO)}</td>
+                <td class="module-avg-cell ${getScoreClass(avgProcessusOpt)}">${formatScore(avgProcessusOpt)}</td>
+                <td class="${getScoreClass(student['Outils Simul.'])}">${formatScore(student['Outils Simul.'])}</td>
+                <td class="${getScoreClass(student['Synthèse Filtres'])}">${formatScore(student['Synthèse Filtres'])}</td>
+                <td class="module-avg-cell ${getScoreClass(avgOutilsSim)}">${formatScore(avgOutilsSim)}</td>
+                <td class="${getScoreClass(student['Traitement Signal'])}">${formatScore(student['Traitement Signal'])}</td>
+                <td class="${getScoreClass(student['Théorie Info (T)'])}">${formatScore(student['Théorie Info (T)'])}</td>
+                <td class="${getScoreClass(student['Théorie Info (C)'])}">${formatScore(student['Théorie Info (C)'])}</td>
+                <td class="module-avg-cell ${getScoreClass(avgBasesTI)}">${formatScore(avgBasesTI)}</td>
+                <td class="${getScoreClass(student['Media Trans.'])}">${formatScore(student['Media Trans.'])}</td>
+                <td class="${getScoreClass(student['Réseaux ICT'])}">${formatScore(student['Réseaux ICT'])}</td>
+                <td class="module-avg-cell ${getScoreClass(avgReseaux)}">${formatScore(avgReseaux)}</td>
+                <td class="${getScoreClass(student['Outils Collab.'])}">${formatScore(student['Outils Collab.'])}</td>
+                <td class="${getScoreClass(student['Traitement Données'])}">${formatScore(student['Traitement Données'])}</td>
+                <td class="module-avg-cell ${getScoreClass(avgCompNum)}">${formatScore(avgCompNum)}</td>
+                <td class="${getScoreClass(student.TEC)}">${formatScore(student.TEC)}</td>
+                <td class="${getScoreClass(student.Anglais)}">${formatScore(student.Anglais)}</td>
+                <td class="module-avg-cell ${getScoreClass(avgLangues)}">${formatScore(avgLangues)}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+
+        // Add module averages row
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'module-average-row';
+        
+        // Calculate group averages for the bottom row
+        const groupAvgs = {};
+        Object.keys(moduleGroups).forEach(groupName => {
+            const fields = moduleGroups[groupName];
+            const validAvgs = fields.map(field => parseFloat(moduleAverages[field])).filter(avg => !isNaN(avg));
+            if (validAvgs.length > 0) {
+                const average = validAvgs.reduce((a, b) => a + b, 0) / validAvgs.length;
+                // Si la moyenne est inférieure à 11, la remplacer par 11
+                groupAvgs[groupName] = (average < 11 ? 11 : average).toFixed(2);
+            } else {
+                groupAvgs[groupName] = 'N/A';
+            }
+        });
+        
+        avgRow.innerHTML = `
+            <td class="module-average-cell">-</td>
+            <td class="module-average-cell" colspan="3">MOYENNE DE MODULE</td>
+            <td class="module-average-cell">-</td>
+            <td class="module-average-cell">${moduleAverages.Algorithmique}</td>
+            <td class="module-average-cell">${moduleAverages.Architecture}</td>
+            <td class="module-average-cell">${moduleAverages['Systèmes Exploit.']}</td>
+            <td class="module-average-cell">${groupAvgs.infoBase}</td>
+            <td class="module-average-cell">${moduleAverages.Statistique}</td>
+            <td class="module-average-cell">${moduleAverages.RO}</td>
+            <td class="module-average-cell">${groupAvgs.processusOpt}</td>
+            <td class="module-average-cell">${moduleAverages['Outils Simul.']}</td>
+            <td class="module-average-cell">${moduleAverages['Synthèse Filtres']}</td>
+            <td class="module-average-cell">${groupAvgs.outilsSim}</td>
+            <td class="module-average-cell">${moduleAverages['Traitement Signal']}</td>
+            <td class="module-average-cell">${moduleAverages['Théorie Info (T)']}</td>
+            <td class="module-average-cell">${moduleAverages['Théorie Info (C)']}</td>
+            <td class="module-average-cell">${groupAvgs.basesTI}</td>
+            <td class="module-average-cell">${moduleAverages['Media Trans.']}</td>
+            <td class="module-average-cell">${moduleAverages['Réseaux ICT']}</td>
+            <td class="module-average-cell">${groupAvgs.reseaux}</td>
+            <td class="module-average-cell">${moduleAverages['Outils Collab.']}</td>
+            <td class="module-average-cell">${moduleAverages['Traitement Données']}</td>
+            <td class="module-average-cell">${groupAvgs.compNum}</td>
+            <td class="module-average-cell">${moduleAverages.TEC}</td>
+            <td class="module-average-cell">${moduleAverages.Anglais}</td>
+            <td class="module-average-cell">${groupAvgs.langues}</td>
+        `;
+        
+        tableBody.appendChild(avgRow);
+    </script>
+</body>
+</html>

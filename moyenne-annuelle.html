@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moyenne Annuelle - Smart ICT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .back-button:hover {
+            background: #1976D2;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .student-info {
+            background-color: #e8f5e8;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 12px;
+        }
+        .average-cell {
+            font-weight: bold;
+        }
+        .high-score {
+            background-color: #c8e6c9;
+        }
+        .low-score {
+            background-color: #ffcdd2;
+        }
+        .medium-score {
+            background-color: #fff3e0;
+        }
+        .ranking-cell {
+            background-color: #f0f4ff;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .annual-average-row {
+            background-color: #e3f2fd !important;
+            font-weight: bold;
+            border-top: 2px solid #1976d2;
+        }
+        .annual-average-cell {
+            background-color: #bbdefb !important;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+        }
+        .stats-summary {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .stat-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            color: #007bff;
+        }
+        .s1-score {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .s2-score {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        .annual-score {
+            background-color: #fff3e0;
+            color: #e65100;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-button">← Retour à l'accueil</a>
+        <h1>Moyenne Annuelle - Filière Smart ICT INE1</h1>
+        
+        <div class="table-container">
+            <table id="annualTable">
+                <thead>
+                    <tr>
+                        <th>Classement</th>
+                        <th>Matricule</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Moyenne S1</th>
+                        <th>Moyenne S2</th>
+                        <th>Moyenne Annuelle</th>
+                    </tr>
+                </thead>
+                <tbody id="annualTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-title">Nombre d'étudiants</div>
+                <div class="stat-value" id="totalStudents">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Moyenne annuelle de classe</div>
+                <div class="stat-value" id="classAverage">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Meilleure moyenne annuelle</div>
+                <div class="stat-value" id="bestAverage">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Étudiants avec moyenne ≥ 11</div>
+                <div class="stat-value" id="passingStudents">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données CSV pour le S1
+        const s1Data = `Matricule,Nom,Prénom,Moyenne,Algorithmique,Anglais,Architecture,Traitement Données,Outils Collab.,Media Trans.,Outils Simul.,Réseaux ICT,RO,Statistique,Synthèse Filtres,Systèmes Exploit.,TEC,Théorie Info (T),Théorie Info (C),Traitement Signal
+240144,AGOURAM,Yassine,11.85,9.82,15,13.25,15.5,13,15.75,15.5,11,11.75,9.5,13,12.5,13,8,7,6
+240145,BAHHOU,Marouane,14.98,15.392,15.25,17.25,18.5,15,18,18.5,12.25,7.5,10,16.5,10.5,17,19,13,16
+240146,BENHACHMI,Saad,12.48,12.47,14,17.5,14,8,14.5,15,11,13.5,9.5,12,10.75,16,9,13.5,9
+240147,BENSELLOUM,Nizar,14.66,15.028,16.5,15,16,15,15,19.5,16,15.25,12,11.5,11.25,17,12,12.5,15
+240148,BOUAJINE,Yasmine,11.53,11.026,12,10,17,10,12,7.5,16,15.25,8.5,12,12.25,16,10,12.5,2.5
+240149,BOUKCIM,Mohamed,12.75,13.234,14.5,15.75,16,14,16,9.5,11,11.75,11,12,13.75,13,10.5,8.5,13.5
+240150,BOULMANI,Ghita,13.31,11.284,15,17,15.5,10,16,17.5,12,8.5,10,14,10.75,12,20,12.5,11
+240151,BOURHIM,Souhail,14.16,12.038,15.5,16,18,14,17,14,13.5,18.25,15.5,11,14.75,14,16,11.5,5.5
+240152,BOUTJANOUITE,Kaouthar,10.63,8.254,13,15,10,11,13.25,6,10,6.5,6.5,18,10.5,15,9,9.5,8.5
+240153,BOUYA,Houda,13.46,11.578,13.5,15.75,16,12,20,11,10,16.75,6.5,15.5,10.75,14,16,14.5,11.5
+240154,CHAQUAI,Maryeme,11.97,10.45,16,14.25,13.5,13,18,11,11,11,7,8.5,9.75,17,14,11,6
+240155,DIANA,Mohamed,10.07,10.45,13,13,8,10,10,7.5,9,6,10,11.5,10.75,14,11.5,8.5,8
+240156,EL ABDOUSSI,Wissal,12.47,12.02,8.5,15.5,13,12,15,11,12,13.75,7,18,9.25,13,14.5,15,10
+240157,EL KARFI,Soufia,11.63,12.118,15,0,14,11,15,11.5,12.5,12.5,8.5,12.5,15,17,11,10,8.5
+240159,EL WALI,Zakarya,13.03,14.04,13,15,15,13,15.5,17,16.75,16.5,7.5,9,13.25,15,11.5,8.5,8
+240160,EL-AASSEMY,Abdellah,12.67,14.966,13,14.5,15,11,13.25,12.5,14.25,8.75,9,9,18,10,17,11,11.5
+240161,ELGUERCHE,Ahmed,11.89,10.436,12,14,14.5,14,15,8.5,13,10.5,10,9,9.25,15,13.5,11,10.5
+240162,ESSOUFI,Hassan,14.92,13.98,15,18.25,16,14,18.5,17.5,13.25,15.5,13.5,15.5,8.25,14,19.5,13.5,12.5
+240163,GADAL,Leila,12.02,11.13,14,12,15,12,15.5,14,14,9,11,10,10.75,13,11,11.5,8.5
+240164,GHANAM,Fatima-Ezzahra,12.14,10.288,15,13.5,18,13,17,11,9,15.5,11.5,11,11,17,7,11.5,3
+240165,HAME,Ali,12.87,12.664,14,16,15.5,15,15.25,6,10,12.25,14.5,12,15.25,17,8,14,8.5
+240166,IDRISSI,Salma,11.98,11.63,14,15,15.5,12,14,9,14.75,8.5,11.5,13.5,13.25,16,11,9,3
+240167,IKTIB,Khalid,12.15,12.578,14,12.5,17,12,15.75,9.5,16.25,16.5,4,14.5,8.75,16,6,13,6
+240168,KHAYARI,Said,15.08,15.012,15.25,17.25,16.5,15,17,17.5,13.5,11.75,11.5,19,12.5,15,17,12.5,15
+240169,KOUTAT,Saâd,14.67,16.186,15.5,16,16,15,18.75,19,17.25,15.5,12,13.5,14,11,7,10,18
+240170,LAZAAR,El Mehdi,14.96,13.87,15,16,19,17,18,18,11,13.75,11,16,17.75,17,14,14.5,7.5
+240171,MAMOURI,Zakaria,8.69,11.726,14,7,17,8,13,0,12.25,6.5,6,10.5,11.5,10,3,7,1.5
+240172,NASSOUH,Iliace,13.77,15.27,13.75,15.5,16.5,10,15,18,11,14.25,11,14.5,11.5,10,18,10.5,15.5
+240174,SALAHMI,Nouhaila,13.17,12.424,15.75,15.25,18,15,17.25,15,10,10.25,8,15.5,12.25,15,9.5,14,7.5
+240175,SELLAM,Mustapha,16.24,16.072,16,18,18,13,20,19.5,10,13.75,16.5,18.5,17,15,15.5,14.5,18.5
+240176,SELLAME,Salwa,11.03,11.678,13.75,14.75,16,12,11,10.5,10,7.5,11,10,8.75,14,6,11,8.5
+240177,TABIT,Youssef,11.67,13.984,13.25,15.5,14.5,8,14,11,19,10.25,10,9.5,12.75,10,4.5,9,11.5`;
+
+        // Données CSV pour le S2
+        const s2Data = `Matricule,Nom,Prénom,Bases_Données,Communications_Numériques,English_IT,Evolution_Réseaux,Langue_Française,Management,Multiplexage,POO_Python,Programmation_Web,Projet_Thématique,Sociologie,Statistical_Learning,Techniques_Optimisation,Traitement_Visuel
+240144,AGOURAM,Yassine,12.50,9.50,9,11.56,14,11,15,12,15.00,15.00,10.5,13.50,11.25,10
+240145,BAHHOU,Marouane,18.75,15.50,15.25,15.65,17,16,14.25,10,14.60,17.50,17.5,12.00,15.75,16.5
+240146,BENHACHMI,Saad,12.00,8.50,9,10.14,16,10,16.5,13,13.75,14.00,IPE,11.50,11,13
+240147,BENSELLOUM,Nizar,17.50,18.00,14.5,15.41,18,15,17.5,16,14.50,19.00,16,15.00,14.25,17
+240148,BOUAJINE,Yasmine,15.50,14.50,15.5,15.17,15,13.5,13,18,13.50,18.00,12.5,16.00,14,15.5
+240149,BOUKCIM,Mohamed,12.00,3.00,11.75,11.00,14,10.5,Abs,14,12.50,15.00,IPE,11.00,12.25,13.25
+240150,BOULMANI,Ghita,15.00,17.00,15.5,15.87,14,14.5,16,14,16.25,16.00,15.5,16.50,16.25,17.5
+240151,BOURHIM,Souhail,13.50,13.00,13.75,15.32,16,15,15.75,13,16.00,19.00,16.5,14.50,12.25,12.5
+240152,BOUTJANOUITE,Kaouthar,12.50,10.50,14.5,11.77,15,17,Abs,8,11.25,17.00,4.5,11.00,9.25,13
+240153,BOUYA,Houda,15.50,12.00,13.75,14.15,16,7,14.25,13,16.88,17.00,9.25,11.00,12,11
+240154,CHAQUAI,Maryeme,14.50,10.00,15,12.69,16,10,15,10,14.00,18.00,9.5,12.00,11,9.5
+240155,DIANA,Mohamed,12.00,5.00,8.5,16.11,14,8,11,6,11.75,16.00,9,8.50,12.5,5
+240156,EL ABDOUSSI,Wissal,12.00,14.00,13.25,12.10,16,9.5,Abs,9,12.00,17.00,7,8.50,12.5,10.5
+240157,EL KARFI,Soufia,16.50,2.00,15,11.00,16,0,15,12,17.00,17.00,9.5,11.00,9.25,15.25
+240159,EL WALI,Zakarya,12.75,8.25,13.25,14.49,15,11,Abs,9,11.00,17.00,10,13.00,14.5,17.5
+240160,EL-AASSEMY,Abdellah,15.50,8.00,11.5,14.04,13,10.5,Abs,14,11.00,16.00,IPE,14.50,13.5,16
+240161,ELGUERCHE,Ahmed,12.50,8.50,12.5,11.48,16,15.5,14.25,7,15.00,18.00,4.5,16.00,11,15.5
+240162,ESSOUFI,Hassan,18.50,15.50,13,14.64,13,13.5,14.5,15,16.50,18.00,6.5,14.50,12.61,11.25
+240163,GADAL,Leila,14.75,11.00,13,11.49,15,9.5,12.5,9,14.25,17.00,9.5,14.00,9.5,4
+240164,GHANAM,Fatima-Ezzahra,ABS,ABS,15.5,9.45,17,0,Abs,0,16.50,17.00,6.5,10.50,abs,10
+240165,HAME,Ali,14.00,4.00,14.5,12.38,16,11,11.5,7,13.25,15.00,16.5,11.00,11,15.25
+240166,IDRISSI,Salma,12.50,10.00,14.375,10.63,14,10,13.5,8,14.75,17.00,7,9.00,12.5,15
+240167,IKTIB,Khalid,12.50,6.25,12,11.98,Abs,12.5,Abs,14,11.00,16.00,IPE,10.50,10,14
+240168,KHAYARI,Said,13.50,14.50,15.75,15.69,15,16,17.5,16,11.00,17.00,15,12.00,14,14
+240169,KOUTAT,Saâd,16.00,13.50,9.5,12.01,15,,Abs,13,11.00,16.00,6.5,10.50,14.25,6.25
+240170,LAZAAR,El Mehdi,18.50,12.50,16,14.60,17,15.5,16.6,13,19.25,17.50,16.5,16.50,13,17.25
+240171,MAMOURI,Zakaria,14.25,11.00,15.25,Abs,13,,Abs,12,11.25,16.00,ABS,8.00,10,Absent
+240172,NASSOUH,Iliace,17.50,11.00,14.5,9.44,13,11.5,12,13,11.00,16.00,5,9.00,14.75,14.75
+240174,SALAHMI,Nouhaila,13.50,13.00,15.5,13.86,14,11,15.25,10,14.00,17.00,7.5,8.00,14,12.5
+240175,SELLAM,Mustapha,19.50,15.50,15.5,14.42,15,16,15.75,18,15.75,18.00,4.75,14.00,17.5,17
+240176,SELLAME,Salwa,14.50,12.00,15.5,11.22,14,10.5,15.5,13,12.00,16.00,8,12.00,12.75,13.5
+240177,TABIT,Youssef,13.50,13.00,12.5,12.14,14,10,Abs,16,13.75,16.50,15.5,10.00,14.5,15`;
+
+        function getScoreClass(score) {
+            if (score === null || score === undefined || score === '' || 
+                score === 'ABS' || score === 'Abs' || score === 'IPE' || 
+                score === 'abs' || score === 'Absent' || score === 'N/A') {
+                return 'low-score';
+            }
+            const numScore = parseFloat(score);
+            if (isNaN(numScore)) return 'low-score';
+            if (numScore >= 16) return 'high-score';
+            if (numScore >= 12) return 'medium-score';
+            return 'low-score';
+        }
+
+        function formatScore(score) {
+            if (score === null || score === undefined || score === '' || 
+                score === 'ABS' || score === 'Abs' || score === 'abs' || 
+                score === 'IPE' || score === 'Absent' || score === 'N/A') {
+                return 'ABS';
+            }
+            const numScore = parseFloat(score);
+            if (isNaN(numScore)) return 'ABS';
+            return numScore.toFixed(2);
+        }
+
+        function calculateGeneralAverage(student, moduleGroups) {
+            const moduleAverages = [];
+            Object.values(moduleGroups).forEach(module => {
+                const avg = calculateModuleAverage(student, module.elements);
+                if (avg !== 'N/A') {
+                    moduleAverages.push(avg);
+                }
+            });
+            
+            if (moduleAverages.length === 0) return 0;
+            return moduleAverages.reduce((a, b) => a + b, 0) / moduleAverages.length;
+        }
+
+        function calculateModuleAverage(student, moduleElements) {
+            const validScores = [];
+            moduleElements.forEach(element => {
+                const score = student[element];
+                if (score !== null && score !== undefined && score !== '' && 
+                    score !== 'ABS' && score !== 'Abs' && score !== 'abs' &&
+                    score !== 'IPE' && score !== 'Absent') {
+                    const numScore = parseFloat(score);
+                    if (!isNaN(numScore)) {
+                        validScores.push(numScore);
+                    }
+                }
+            });
+            
+            if (validScores.length === 0) return 'N/A';
+            return validScores.reduce((a, b) => a + b, 0) / validScores.length;
+        }
+
+        // Parse S1 data
+        const s1Results = Papa.parse(s1Data, {
+            header: true,
+            skipEmptyLines: true,
+            dynamicTyping: true
+        });
+
+        // Parse S2 data
+        const s2Results = Papa.parse(s2Data, {
+            header: true,
+            skipEmptyLines: true
+        });
+
+        // Define module groups for S2
+        const moduleGroups = {
+            'POO_et_BD': {
+                name: 'POO et Bases de données',
+                elements: ['POO_Python', 'Bases_Données', 'Programmation_Web']
+            },
+            'Apprentissage_Optimisation': {
+                name: 'Apprentissage et Optimisation',
+                elements: ['Statistical_Learning', 'Techniques_Optimisation']
+            },
+            'Communication_Info': {
+                name: 'Communication et traitement info',
+                elements: ['Communications_Numériques', 'Traitement_Visuel']
+            },
+            'Reseaux_Telecoms': {
+                name: 'Réseaux Télécoms',
+                elements: ['Multiplexage', 'Evolution_Réseaux']
+            },
+            'Projet_Decouverte': {
+                name: 'Projet Découverte',
+                elements: ['Projet_Thématique']
+            },
+            'Ingenieur_Diversite': {
+                name: 'Ingénieur et Diversité Culturelle',
+                elements: ['Sociologie', 'Management']
+            },
+            'Langues': {
+                name: 'Langues étrangères',
+                elements: ['Langue_Française', 'English_IT']
+            }
+        };
+
+        // Calculate S2 averages for each student using the same logic as S2*.html
+        const s2StudentsWithAverages = s2Results.data.map(student => {
+            const studentData = { ...student };
+            
+            // Calculate module averages for each student
+            Object.keys(moduleGroups).forEach(moduleKey => {
+                const module = moduleGroups[moduleKey];
+                studentData[moduleKey] = calculateModuleAverage(student, module.elements);
+            });
+            
+            // Calculate general average using the same logic as S2*.html
+            const moduleAverages = [];
+            Object.values(moduleGroups).forEach(module => {
+                const avg = calculateModuleAverage(student, module.elements);
+                if (avg !== 'N/A') {
+                    moduleAverages.push(avg);
+                }
+            });
+            
+            if (moduleAverages.length === 0) {
+                studentData.generalAverage = 0;
+            } else {
+                studentData.generalAverage = moduleAverages.reduce((a, b) => a + b, 0) / moduleAverages.length;
+            }
+            
+            return studentData;
+        });
+
+        // Create a map of matricule to S2 general average
+        const s2AveragesMap = {};
+        s2StudentsWithAverages.forEach(student => {
+            s2AveragesMap[student.Matricule] = student.generalAverage;
+        });
+
+        // Combine S1 and S2 data
+        const combinedStudents = s1Results.data.map(s1Student => {
+            const s1Average = s1Student.Moyenne;
+            const s2Average = s2AveragesMap[s1Student.Matricule] || 0;
+            const annualAverage = (s1Average + s2Average) / 2;
+            
+            return {
+                Matricule: s1Student.Matricule,
+                Nom: s1Student.Nom,
+                Prénom: s1Student.Prénom,
+                s1Average: s1Average,
+                s2Average: s2Average,
+                annualAverage: annualAverage
+            };
+        });
+
+        // Sort by annual average and add ranking
+        const sortedStudents = combinedStudents
+            .sort((a, b) => b.annualAverage - a.annualAverage)
+            .map((student, index) => ({ ...student, ranking: index + 1 }));
+
+        // Generate table
+        const tableBody = document.getElementById('annualTableBody');
+
+        sortedStudents.forEach(student => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td class="ranking-cell">${student.ranking}</td>
+                <td class="student-info">${student.Matricule}</td>
+                <td class="student-info">${student.Nom}</td>
+                <td class="student-info">${student.Prénom}</td>
+                <td class="s1-score ${getScoreClass(student.s1Average)}">${formatScore(student.s1Average)}</td>
+                <td class="s2-score ${getScoreClass(student.s2Average)}">${formatScore(student.s2Average)}</td>
+                <td class="annual-score ${getScoreClass(student.annualAverage)}">${formatScore(student.annualAverage)}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+
+        // Add annual average row
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'annual-average-row';
+        
+        const s1ClassAverage = sortedStudents
+            .map(s => s.s1Average)
+            .filter(avg => avg !== 'N/A' && !isNaN(avg))
+            .reduce((a, b) => a + b, 0) / sortedStudents.length;
+            
+        const s2ClassAverage = sortedStudents
+            .map(s => s.s2Average)
+            .filter(avg => avg !== 'N/A' && !isNaN(avg) && avg > 0)
+            .reduce((a, b) => a + b, 0) / sortedStudents.filter(s => s.s2Average > 0).length;
+            
+        const annualClassAverage = (s1ClassAverage + s2ClassAverage) / 2;
+        
+        avgRow.innerHTML = `
+            <td class="annual-average-cell">-</td>
+            <td class="annual-average-cell" colspan="3">MOYENNE DE CLASSE</td>
+            <td class="annual-average-cell">${s1ClassAverage.toFixed(2)}</td>
+            <td class="annual-average-cell">${s2ClassAverage.toFixed(2)}</td>
+            <td class="annual-average-cell">${annualClassAverage.toFixed(2)}</td>
+        `;
+        
+        tableBody.appendChild(avgRow);
+
+        // Calculate statistics
+        const totalStudents = sortedStudents.length;
+        const validAnnualAverages = sortedStudents
+            .map(s => s.annualAverage)
+            .filter(avg => avg !== 'N/A' && !isNaN(avg));
+        
+        const classAverage = validAnnualAverages.length > 0 
+            ? (validAnnualAverages.reduce((a, b) => a + b, 0) / validAnnualAverages.length) 
+            : 0;
+        
+        const bestAverage = validAnnualAverages.length > 0 
+            ? Math.max(...validAnnualAverages) 
+            : 0;
+        
+        const passingStudents = sortedStudents
+            .filter(s => s.annualAverage >= 11)
+            .length;
+
+        // Update statistics display
+        document.getElementById('totalStudents').textContent = totalStudents;
+        document.getElementById('classAverage').textContent = classAverage.toFixed(2);
+        document.getElementById('bestAverage').textContent = bestAverage.toFixed(2);
+        document.getElementById('passingStudents').textContent = `${passingStudents} (${Math.round((passingStudents / totalStudents) * 100)}%)`;
+    </script>
+</body>
+</html> 
