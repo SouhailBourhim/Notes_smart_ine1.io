@@ -120,6 +120,24 @@
             height: 20px;
             border: 1px solid #ccc;
         }
+        .plafonne {
+            background-color: #ffeb3b !important;
+            color: #333 !important;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer strong {
+            color: #2196F3;
+        }
     </style>
 </head>
 <body>
@@ -174,6 +192,10 @@
         </div>
         
     </div>
+    
+    <div class="footer">
+        <p>Développé par <strong>Souhail Bourhim</strong></p>
+    </div>
 
     <script>
         // Données CSV intégrées
@@ -222,17 +244,32 @@
             return score === 0 || score === '0' ? 'ABS' : parseFloat(score).toFixed(2);
         }
 
+        function formatModuleAverage(moduleAvg) {
+            if (moduleAvg.capped) {
+                return '11 (plafonné)';
+            }
+            return formatScore(moduleAvg.average);
+        }
+
         function calculateModuleAverage(student, moduleFields) {
             const validScores = moduleFields
                 .map(field => student[field])
                 .filter(score => score !== null && score !== undefined && score !== 0);
             
-            if (validScores.length === 0) return 0;
-            const sum = validScores.reduce((a, b) => a + b, 0);
-            const average = sum / validScores.length;
+            if (validScores.length === 0) return { average: 0, capped: false };
+            
+            // Appliquer le plafonnement à 11 pour chaque note individuelle
+            const cappedScores = validScores.map(score => {
+                const numScore = parseFloat(score);
+                return isNaN(numScore) ? 0 : (numScore < 11 ? 11 : numScore);
+            });
+            
+            const sum = cappedScores.reduce((a, b) => a + b, 0);
+            const average = sum / cappedScores.length;
             
             // Si la moyenne est inférieure à 11, la remplacer par 11
-            return average < 11 ? 11 : average;
+            const isCapped = average < 11;
+            return { average: isCapped ? 11 : average, capped: isCapped };
         }
 
         // Parse CSV data
@@ -241,12 +278,6 @@
             skipEmptyLines: true,
             dynamicTyping: true
         });
-
-        // Sort students by average (descending) and add ranking
-        const sortedStudents = results.data
-            .map((student, index) => ({ ...student, originalIndex: index }))
-            .sort((a, b) => b.Moyenne - a.Moyenne)
-            .map((student, index) => ({ ...student, ranking: index + 1 }));
 
         // Define module groups
         const moduleGroups = {
@@ -258,6 +289,42 @@
             compNum: ['Outils Collab.', 'Traitement Données'],
             langues: ['TEC', 'Anglais']
         };
+
+        // Calculate new general averages and sort students
+        const studentsWithNewAverages = results.data.map(student => {
+            // Calculate module group averages for this student
+            const avgInfoBase = calculateModuleAverage(student, moduleGroups.infoBase);
+            const avgProcessusOpt = calculateModuleAverage(student, moduleGroups.processusOpt);
+            const avgOutilsSim = calculateModuleAverage(student, moduleGroups.outilsSim);
+            const avgBasesTI = calculateModuleAverage(student, moduleGroups.basesTI);
+            const avgReseaux = calculateModuleAverage(student, moduleGroups.reseaux);
+            const avgCompNum = calculateModuleAverage(student, moduleGroups.compNum);
+            const avgLangues = calculateModuleAverage(student, moduleGroups.langues);
+            
+            // Calculate new general average based on capped module averages
+            const moduleAverages = [avgInfoBase.average, avgProcessusOpt.average, avgOutilsSim.average, 
+                                   avgBasesTI.average, avgReseaux.average, avgCompNum.average, avgLangues.average];
+            const validAverages = moduleAverages.filter(avg => avg > 0);
+            const newGeneralAverage = validAverages.length > 0 ? 
+                validAverages.reduce((a, b) => a + b, 0) / validAverages.length : 0;
+            
+            return {
+                ...student,
+                avgInfoBase,
+                avgProcessusOpt,
+                avgOutilsSim,
+                avgBasesTI,
+                avgReseaux,
+                avgCompNum,
+                avgLangues,
+                newGeneralAverage
+            };
+        });
+
+        // Sort students by new general average (descending) and add ranking
+        const sortedStudents = studentsWithNewAverages
+            .sort((a, b) => b.newGeneralAverage - a.newGeneralAverage)
+            .map((student, index) => ({ ...student, ranking: index + 1 }));
 
         // Calculate overall module averages
         const moduleAverages = {};
@@ -286,45 +353,36 @@
         sortedStudents.forEach(student => {
             const row = document.createElement('tr');
             
-            // Calculate module group averages for this student
-            const avgInfoBase = calculateModuleAverage(student, moduleGroups.infoBase);
-            const avgProcessusOpt = calculateModuleAverage(student, moduleGroups.processusOpt);
-            const avgOutilsSim = calculateModuleAverage(student, moduleGroups.outilsSim);
-            const avgBasesTI = calculateModuleAverage(student, moduleGroups.basesTI);
-            const avgReseaux = calculateModuleAverage(student, moduleGroups.reseaux);
-            const avgCompNum = calculateModuleAverage(student, moduleGroups.compNum);
-            const avgLangues = calculateModuleAverage(student, moduleGroups.langues);
-            
             // Informations de l'étudiant avec classement
             row.innerHTML = `
                 <td class="ranking-cell">${student.ranking}</td>
                 <td class="student-info">${student.Matricule}</td>
                 <td class="student-info">${student.Nom}</td>
                 <td class="student-info">${student.Prénom}</td>
-                <td class="average-cell ${getScoreClass(student.Moyenne)}">${formatScore(student.Moyenne)}</td>
+                <td class="average-cell ${getScoreClass(student.newGeneralAverage)}">${formatScore(student.newGeneralAverage)}</td>
                 <td class="${getScoreClass(student.Algorithmique)}">${formatScore(student.Algorithmique)}</td>
                 <td class="${getScoreClass(student.Architecture)}">${formatScore(student.Architecture)}</td>
                 <td class="${getScoreClass(student['Systèmes Exploit.'])}">${formatScore(student['Systèmes Exploit.'])}</td>
-                <td class="module-avg-cell ${getScoreClass(avgInfoBase)}">${formatScore(avgInfoBase)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgInfoBase.average)}">${formatModuleAverage(student.avgInfoBase)}</td>
                 <td class="${getScoreClass(student.Statistique)}">${formatScore(student.Statistique)}</td>
                 <td class="${getScoreClass(student.RO)}">${formatScore(student.RO)}</td>
-                <td class="module-avg-cell ${getScoreClass(avgProcessusOpt)}">${formatScore(avgProcessusOpt)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgProcessusOpt.average)}">${formatModuleAverage(student.avgProcessusOpt)}</td>
                 <td class="${getScoreClass(student['Outils Simul.'])}">${formatScore(student['Outils Simul.'])}</td>
                 <td class="${getScoreClass(student['Synthèse Filtres'])}">${formatScore(student['Synthèse Filtres'])}</td>
-                <td class="module-avg-cell ${getScoreClass(avgOutilsSim)}">${formatScore(avgOutilsSim)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgOutilsSim.average)}">${formatModuleAverage(student.avgOutilsSim)}</td>
                 <td class="${getScoreClass(student['Traitement Signal'])}">${formatScore(student['Traitement Signal'])}</td>
                 <td class="${getScoreClass(student['Théorie Info (T)'])}">${formatScore(student['Théorie Info (T)'])}</td>
                 <td class="${getScoreClass(student['Théorie Info (C)'])}">${formatScore(student['Théorie Info (C)'])}</td>
-                <td class="module-avg-cell ${getScoreClass(avgBasesTI)}">${formatScore(avgBasesTI)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgBasesTI.average)}">${formatModuleAverage(student.avgBasesTI)}</td>
                 <td class="${getScoreClass(student['Media Trans.'])}">${formatScore(student['Media Trans.'])}</td>
                 <td class="${getScoreClass(student['Réseaux ICT'])}">${formatScore(student['Réseaux ICT'])}</td>
-                <td class="module-avg-cell ${getScoreClass(avgReseaux)}">${formatScore(avgReseaux)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgReseaux.average)}">${formatModuleAverage(student.avgReseaux)}</td>
                 <td class="${getScoreClass(student['Outils Collab.'])}">${formatScore(student['Outils Collab.'])}</td>
                 <td class="${getScoreClass(student['Traitement Données'])}">${formatScore(student['Traitement Données'])}</td>
-                <td class="module-avg-cell ${getScoreClass(avgCompNum)}">${formatScore(avgCompNum)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgCompNum.average)}">${formatModuleAverage(student.avgCompNum)}</td>
                 <td class="${getScoreClass(student.TEC)}">${formatScore(student.TEC)}</td>
                 <td class="${getScoreClass(student.Anglais)}">${formatScore(student.Anglais)}</td>
-                <td class="module-avg-cell ${getScoreClass(avgLangues)}">${formatScore(avgLangues)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.avgLangues.average)}">${formatModuleAverage(student.avgLangues)}</td>
             `;
             
             tableBody.appendChild(row);

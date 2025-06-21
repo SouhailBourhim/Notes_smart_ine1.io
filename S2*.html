@@ -167,6 +167,24 @@
             font-size: 0.9em;
             color: #666;
         }
+        .plafonne {
+            background-color: #ffeb3b !important;
+            color: #333 !important;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer strong {
+            color: #2196F3;
+        }
     </style>
 </head>
 <body>
@@ -184,45 +202,49 @@
                         <th rowspan="2">Moyenne Générale</th>
                         
                         <!-- POO et Bases de données -->
-                        <th class="module-group-header">POO et Bases données</th>
                         <th class="module-header">POO Python</th>
                         <th class="module-header">Bases Données</th>
                         <th class="module-header">Programmation Web</th>
+                        <th class="module-group-header">Moy. POO et BD</th>
                         
                         <!-- Apprentissage et Optimisation -->
-                        <th class="module-group-header">Apprentissage Optimisation</th>
                         <th class="module-header">Statistical Learning</th>
                         <th class="module-header">Techniques Optimisation</th>
+                        <th class="module-group-header">Moy. App. Opt.</th>
                         
                         <!-- Communication et traitement info -->
-                        <th class="module-group-header">Communication Info</th>
                         <th class="module-header">Communications Numériques</th>
                         <th class="module-header">Traitement Visuel</th>
+                        <th class="module-group-header">Moy. Comm. Info</th>
                         
                         <!-- Réseaux Télécoms -->
-                        <th class="module-group-header">Réseaux Télécoms</th>
                         <th class="module-header">Multiplexage</th>
                         <th class="module-header">Evolution Réseaux</th>
+                        <th class="module-group-header">Moy. Réseaux</th>
                         
                         <!-- Projet Découverte -->
-                        <th class="module-group-header">Projet Découverte</th>
                         <th class="module-header">Projet Thématique</th>
+                        <th class="module-group-header">Moy. Projet</th>
                         
                         <!-- Ingénieur et Diversité -->
-                        <th class="module-group-header">Ingénieur Diversité</th>
                         <th class="module-header">Sociologie</th>
                         <th class="module-header">Management</th>
+                        <th class="module-group-header">Moy. Ing. Div.</th>
                         
                         <!-- Langues -->
-                        <th class="module-group-header">Langues</th>
                         <th class="module-header">Langue Française</th>
                         <th class="module-header">English IT</th>
+                        <th class="module-group-header">Moy. Langues</th>
                     </tr>
                 </thead>
                 <tbody id="averagesTableBody">
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="footer">
+        <p>Développé par <strong>Souhail Bourhim</strong></p>
     </div>
 
     <script>
@@ -317,6 +339,13 @@
             return numScore.toFixed(2);
         }
 
+        function formatModuleAverage(moduleAvg) {
+            if (moduleAvg.capped) {
+                return '11 (plafonné)';
+            }
+            return formatScore(moduleAvg.average);
+        }
+
         function calculateModuleAverage(student, moduleElements) {
             const validScores = [];
             moduleElements.forEach(element => {
@@ -331,16 +360,20 @@
                 }
             });
             
-            if (validScores.length === 0) return 'N/A';
-            return validScores.reduce((a, b) => a + b, 0) / validScores.length;
+            if (validScores.length === 0) return { average: 'N/A', capped: false };
+            const average = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+            
+            // Si la moyenne est inférieure à 11, la remplacer par 11
+            const isCapped = average < 11;
+            return { average: isCapped ? 11 : average, capped: isCapped };
         }
 
         function calculateGeneralAverage(student, moduleGroups) {
             const moduleAverages = [];
             Object.values(moduleGroups).forEach(module => {
                 const avg = calculateModuleAverage(student, module.elements);
-                if (avg !== 'N/A') {
-                    moduleAverages.push(avg);
+                if (avg.average !== 'N/A') {
+                    moduleAverages.push(avg.average);
                 }
             });
             
@@ -375,10 +408,10 @@
         Object.keys(moduleGroups).forEach(moduleKey => {
             const validScores = sortedStudents
                 .map(s => s[moduleKey])
-                .filter(score => score !== 'N/A' && !isNaN(score));
+                .filter(score => score.average !== 'N/A' && !isNaN(score.average));
             
             if (validScores.length > 0) {
-                classModuleAverages[moduleKey] = (validScores.reduce((a, b) => a + b, 0) / validScores.length);
+                classModuleAverages[moduleKey] = (validScores.reduce((a, b) => a + b.average, 0) / validScores.length);
             } else {
                 classModuleAverages[moduleKey] = 'N/A';
             }
@@ -424,39 +457,39 @@
                 <td class="average-cell ${getScoreClass(student.generalAverage)}">${formatScore(student.generalAverage)}</td>
                 
                 <!-- POO et Bases de données -->
-                <td class="module-avg-cell ${getScoreClass(student.POO_et_BD)}">${formatScore(student.POO_et_BD)}</td>
                 <td class="${getScoreClass(student.POO_Python)}">${formatScore(student.POO_Python)}</td>
                 <td class="${getScoreClass(student.Bases_Données)}">${formatScore(student.Bases_Données)}</td>
                 <td class="${getScoreClass(student.Programmation_Web)}">${formatScore(student.Programmation_Web)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.POO_et_BD.average)}">${formatModuleAverage(student.POO_et_BD)}</td>
                 
                 <!-- Apprentissage et Optimisation -->
-                <td class="module-avg-cell ${getScoreClass(student.Apprentissage_Optimisation)}">${formatScore(student.Apprentissage_Optimisation)}</td>
                 <td class="${getScoreClass(student.Statistical_Learning)}">${formatScore(student.Statistical_Learning)}</td>
                 <td class="${getScoreClass(student.Techniques_Optimisation)}">${formatScore(student.Techniques_Optimisation)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.Apprentissage_Optimisation.average)}">${formatModuleAverage(student.Apprentissage_Optimisation)}</td>
                 
                 <!-- Communication et traitement info -->
-                <td class="module-avg-cell ${getScoreClass(student.Communication_Info)}">${formatScore(student.Communication_Info)}</td>
                 <td class="${getScoreClass(student.Communications_Numériques)}">${formatScore(student.Communications_Numériques)}</td>
                 <td class="${getScoreClass(student.Traitement_Visuel)}">${formatScore(student.Traitement_Visuel)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.Communication_Info.average)}">${formatModuleAverage(student.Communication_Info)}</td>
                 
                 <!-- Réseaux Télécoms -->
-                <td class="module-avg-cell ${getScoreClass(student.Reseaux_Telecoms)}">${formatScore(student.Reseaux_Telecoms)}</td>
                 <td class="${getScoreClass(student.Multiplexage)}">${formatScore(student.Multiplexage)}</td>
                 <td class="${getScoreClass(student.Evolution_Réseaux)}">${formatScore(student.Evolution_Réseaux)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.Reseaux_Telecoms.average)}">${formatModuleAverage(student.Reseaux_Telecoms)}</td>
                 
                 <!-- Projet Découverte -->
-                <td class="module-avg-cell ${getScoreClass(student.Projet_Decouverte)}">${formatScore(student.Projet_Decouverte)}</td>
                 <td class="${getScoreClass(student.Projet_Thématique)}">${formatScore(student.Projet_Thématique)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.Projet_Decouverte.average)}">${formatModuleAverage(student.Projet_Decouverte)}</td>
                 
                 <!-- Ingénieur et Diversité -->
-                <td class="module-avg-cell ${getScoreClass(student.Ingenieur_Diversite)}">${formatScore(student.Ingenieur_Diversite)}</td>
                 <td class="${getScoreClass(student.Sociologie)}">${formatScore(student.Sociologie)}</td>
                 <td class="${getScoreClass(student.Management)}">${formatScore(student.Management)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.Ingenieur_Diversite.average)}">${formatModuleAverage(student.Ingenieur_Diversite)}</td>
                 
                 <!-- Langues -->
-                <td class="module-avg-cell ${getScoreClass(student.Langues)}">${formatScore(student.Langues)}</td>
                 <td class="${getScoreClass(student.Langue_Française)}">${formatScore(student.Langue_Française)}</td>
                 <td class="${getScoreClass(student.English_IT)}">${formatScore(student.English_IT)}</td>
+                <td class="module-avg-cell ${getScoreClass(student.Langues.average)}">${formatModuleAverage(student.Langues)}</td>
             `;
             
             tableBody.appendChild(row);
@@ -471,39 +504,39 @@
             <td class="module-average-cell">-</td>
             
             <!-- POO et Bases de données -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.POO_et_BD)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.POO_Python)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Bases_Données)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Programmation_Web)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.POO_et_BD)}</td>
             
             <!-- Apprentissage et Optimisation -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.Apprentissage_Optimisation)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Statistical_Learning)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Techniques_Optimisation)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.Apprentissage_Optimisation)}</td>
             
             <!-- Communication et traitement info -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.Communication_Info)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Communications_Numériques)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Traitement_Visuel)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.Communication_Info)}</td>
             
             <!-- Réseaux Télécoms -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.Reseaux_Telecoms)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Multiplexage)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Evolution_Réseaux)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.Reseaux_Telecoms)}</td>
             
             <!-- Projet Découverte -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.Projet_Decouverte)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Projet_Thématique)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.Projet_Decouverte)}</td>
             
             <!-- Ingénieur et Diversité -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.Ingenieur_Diversite)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Sociologie)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Management)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.Ingenieur_Diversite)}</td>
             
             <!-- Langues -->
-            <td class="module-average-cell">${formatScore(classModuleAverages.Langues)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.Langue_Française)}</td>
             <td class="module-average-cell">${formatScore(elementAverages.English_IT)}</td>
+            <td class="module-average-cell">${formatScore(classModuleAverages.Langues)}</td>
         `;
         
         tableBody.appendChild(avgRow);

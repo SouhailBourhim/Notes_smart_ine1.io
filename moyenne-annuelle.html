@@ -145,6 +145,24 @@
             color: #e65100;
             font-weight: bold;
         }
+        .plafonne {
+            background-color: #ffeb3b !important;
+            color: #333 !important;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer strong {
+            color: #2196F3;
+        }
     </style>
 </head>
 <body>
@@ -188,6 +206,10 @@
                 <div class="stat-value" id="passingStudents">-</div>
             </div>
         </div>
+    </div>
+
+    <div class="footer">
+        <p>Développé par <strong>Souhail Bourhim</strong></p>
     </div>
 
     <script>
@@ -285,19 +307,6 @@
             return numScore.toFixed(2);
         }
 
-        function calculateGeneralAverage(student, moduleGroups) {
-            const moduleAverages = [];
-            Object.values(moduleGroups).forEach(module => {
-                const avg = calculateModuleAverage(student, module.elements);
-                if (avg !== 'N/A') {
-                    moduleAverages.push(avg);
-                }
-            });
-            
-            if (moduleAverages.length === 0) return 0;
-            return moduleAverages.reduce((a, b) => a + b, 0) / moduleAverages.length;
-        }
-
         function calculateModuleAverage(student, moduleElements) {
             const validScores = [];
             moduleElements.forEach(element => {
@@ -312,8 +321,12 @@
                 }
             });
             
-            if (validScores.length === 0) return 'N/A';
-            return validScores.reduce((a, b) => a + b, 0) / validScores.length;
+            if (validScores.length === 0) return { average: 'N/A', capped: false };
+            const average = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+            
+            // Si la moyenne est inférieure à 11, la remplacer par 11
+            const isCapped = average < 11;
+            return { average: isCapped ? 11 : average, capped: isCapped };
         }
 
         // Parse S1 data
@@ -321,6 +334,41 @@
             header: true,
             skipEmptyLines: true,
             dynamicTyping: true
+        });
+
+        // Define module groups for S1
+        const s1ModuleGroups = {
+            infoBase: ['Algorithmique', 'Architecture', 'Systèmes Exploit.'],
+            processusOpt: ['Statistique', 'RO'],
+            outilsSim: ['Outils Simul.', 'Synthèse Filtres'],
+            basesTI: ['Traitement Signal', 'Théorie Info (T)', 'Théorie Info (C)'],
+            reseaux: ['Media Trans.', 'Réseaux ICT'],
+            compNum: ['Outils Collab.', 'Traitement Données'],
+            langues: ['TEC', 'Anglais']
+        };
+
+        // Calculate S1 averages for each student using the same logic as S1.html
+        const s1StudentsWithAverages = s1Results.data.map(student => {
+            // Calculate module group averages for this student
+            const avgInfoBase = calculateModuleAverage(student, s1ModuleGroups.infoBase);
+            const avgProcessusOpt = calculateModuleAverage(student, s1ModuleGroups.processusOpt);
+            const avgOutilsSim = calculateModuleAverage(student, s1ModuleGroups.outilsSim);
+            const avgBasesTI = calculateModuleAverage(student, s1ModuleGroups.basesTI);
+            const avgReseaux = calculateModuleAverage(student, s1ModuleGroups.reseaux);
+            const avgCompNum = calculateModuleAverage(student, s1ModuleGroups.compNum);
+            const avgLangues = calculateModuleAverage(student, s1ModuleGroups.langues);
+            
+            // Calculate new general average based on capped module averages
+            const moduleAverages = [avgInfoBase.average, avgProcessusOpt.average, avgOutilsSim.average, 
+                                   avgBasesTI.average, avgReseaux.average, avgCompNum.average, avgLangues.average];
+            const validAverages = moduleAverages.filter(avg => avg > 0);
+            const newGeneralAverage = validAverages.length > 0 ? 
+                validAverages.reduce((a, b) => a + b, 0) / validAverages.length : 0;
+            
+            return {
+                ...student,
+                newGeneralAverage
+            };
         });
 
         // Parse S2 data
@@ -375,8 +423,8 @@
             const moduleAverages = [];
             Object.values(moduleGroups).forEach(module => {
                 const avg = calculateModuleAverage(student, module.elements);
-                if (avg !== 'N/A') {
-                    moduleAverages.push(avg);
+                if (avg.average !== 'N/A') {
+                    moduleAverages.push(avg.average);
                 }
             });
             
@@ -396,8 +444,8 @@
         });
 
         // Combine S1 and S2 data
-        const combinedStudents = s1Results.data.map(s1Student => {
-            const s1Average = s1Student.Moyenne;
+        const combinedStudents = s1StudentsWithAverages.map(s1Student => {
+            const s1Average = s1Student.newGeneralAverage;
             const s2Average = s2AveragesMap[s1Student.Matricule] || 0;
             const annualAverage = (s1Average + s2Average) / 2;
             
